@@ -251,17 +251,15 @@ export default function JobCard({ job, onJobUpdated }: JobCardProps) {
             </span>
           )}
         </div>
-
-        {/* Delete — only for tradesperson */}
-        {isTradesperson && (
-          <button
-            onClick={handleDelete}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600 text-white text-xs font-semibold cursor-pointer hover:bg-red-700 hover:scale-105 transition-all duration-200 shadow-sm"
-            title="Delete request"
-          >
-            🗑️ Delete
-          </button>
-        )}
+        
+        {/* Delete — visible for tradesperson and homeowner */}
+        <button
+          onClick={handleDelete}
+          className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600 text-white text-xs font-semibold cursor-pointer hover:bg-red-700 hover:scale-105 transition-all duration-200 shadow-sm"
+          title="Delete request"
+        >
+          🗑️ Delete
+        </button>
       </div>
     </div>
   );

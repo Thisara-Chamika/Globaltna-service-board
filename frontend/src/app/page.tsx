@@ -32,7 +32,9 @@ export default function HomePage() {
       setLoading(true);
       const category =
         selectedCategory === "All" ? undefined : selectedCategory;
-      const data = await fetchJobs(category);
+      const createdBy =
+        user?.role === "homeowner" ? user._id : undefined;
+      const data = await fetchJobs(category, undefined, createdBy);
       setJobs(data);
       setError("");
     } catch {

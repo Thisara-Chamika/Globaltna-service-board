@@ -22,6 +22,6 @@ router.post("/", authorize("homeowner"), createJob);
 
 // Only tradespeople can update status or delete
 router.patch("/:id", authorize("tradesperson"), updateJobStatus);
-router.delete("/:id", authorize("tradesperson"), deleteJob);
+router.delete("/:id", authorize("tradesperson", "homeowner"), deleteJob);
 
 export default router;

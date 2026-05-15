@@ -52,11 +52,13 @@ export interface CreateJobPayload {
 // ── GET all jobs ──
 export const fetchJobs = async (
   category?: string,
-  status?: string
+  status?: string,
+  createdBy?: string
 ): Promise<IJobRequest[]> => {
   const params = new URLSearchParams();
   if (category) params.append("category", category);
   if (status) params.append("status", status);
+  if (createdBy) params.append("createdBy", createdBy);
 
   const query = params.toString() ? `?${params.toString()}` : "";
   const res = await fetch(`${API_BASE}${query}`, {

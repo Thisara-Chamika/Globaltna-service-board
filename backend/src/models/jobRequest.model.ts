@@ -9,6 +9,7 @@ export interface IJobRequest {
   contactName?: string;
   contactEmail?: string;
   status: "Open" | "In Progress" | "Closed";
+  createdBy?: string;
   createdAt: Date;
 }
 
@@ -60,6 +61,10 @@ const jobRequestSchema = new Schema<IJobRequestDocument>(
         message: "Status must be Open, In Progress, or Closed",
       },
       default: "Open",
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
     },
   },
   {
