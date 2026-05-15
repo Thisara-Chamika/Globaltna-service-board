@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db";
+import authRoutes from "./routes/auth.routes";
 import jobRequestRoutes from "./routes/jobRequest.routes";
 import errorHandler from "./middleware/errorHandler";
 
@@ -19,6 +20,7 @@ app.get("/", (req, res) => {
   res.json({ message: "GlobalTNA Service Board API" });
 });
 
+app.use("/api/auth", authRoutes);
 app.use("/api/jobs", jobRequestRoutes);
 
 // ── 404 for unmatched routes ──
@@ -29,7 +31,7 @@ app.use((req, res) => {
   });
 });
 
-// ── Global Error Handler ──
+// ── Global Error Handler (must be last) ──
 app.use(errorHandler);
 
 // ── Start Server ──
