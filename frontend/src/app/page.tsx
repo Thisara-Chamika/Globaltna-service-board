@@ -62,9 +62,9 @@ export default function HomePage() {
   return (
     <div>
       {/* Page Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
             {isHomeowner ? "Your Service Requests" : "Available Jobs"}
           </h1>
           <p className="text-gray-500">
@@ -85,7 +85,7 @@ export default function HomePage() {
       </div>
 
       {/* Category Filter */}
-      <div className="flex flex-wrap gap-2 mb-8">
+      <div className="flex flex-wrap gap-2 mb-6 sm:mb-8 overflow-x-auto pb-2">
         {categories.map((cat) => (
           <button
             key={cat}
@@ -130,7 +130,7 @@ export default function HomePage() {
 
       {/* Job Cards */}
       {!loading && !error && jobs.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {jobs.map((job) => (
             <JobCard key={job._id} job={job} onJobUpdated={loadJobs} />
           ))}

@@ -32,7 +32,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center">
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 w-full max-w-md">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8 w-full max-w-md mx-4 sm:mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <span className="text-4xl mb-3 block">📝</span>

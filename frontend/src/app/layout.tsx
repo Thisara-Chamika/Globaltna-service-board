@@ -4,7 +4,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 
 export const metadata: Metadata = {
-  title: "Service Request Board | GlobalTNA",
+  title: "Service Request Board",
   description: "A mini service request board for homeowners and tradespeople",
 };
 

@@ -230,8 +230,8 @@ export default function JobCard({ job, onJobUpdated }: JobCardProps) {
       </p>
 
       {/* Footer */}
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-4 border-t border-gray-100">
+        <div className="flex items-center gap-2 flex-wrap">
           {job.category && (
             <span
               className={`text-xs font-medium px-3 py-1 rounded-full ${
@@ -251,7 +251,7 @@ export default function JobCard({ job, onJobUpdated }: JobCardProps) {
             </span>
           )}
         </div>
-        
+
         {/* Delete — visible for tradesperson and homeowner */}
         <button
           onClick={handleDelete}

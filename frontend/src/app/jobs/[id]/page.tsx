@@ -188,7 +188,7 @@ export default function JobDetailPage({
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         {/* Header */}
         <div className="p-8 border-b border-gray-100">
-          <div className="flex items-start justify-between mb-6">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-6">
             <div className="flex items-center gap-4">
               <span className="text-4xl">{icon}</span>
               {job.category && (
@@ -286,7 +286,7 @@ export default function JobDetailPage({
 
           <h1 className="text-2xl font-bold text-gray-900 mb-2">{job.title}</h1>
 
-          <div className="flex items-center gap-4 text-sm text-gray-400">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-400">
             {job.location && (
               <span className="flex items-center gap-1">📍 {job.location}</span>
             )}
@@ -329,8 +329,8 @@ export default function JobDetailPage({
 
         {/* Actions — only for tradesperson */}
         <div className="p-8 bg-gray-50">
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-gray-400">Job ID: {job._id}</p>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <p className="text-xs text-gray-400 break-all">Job ID: {job._id}</p>
             <button
               onClick={handleDelete}
               className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-red-600 text-white text-sm font-semibold cursor-pointer hover:bg-red-700 hover:scale-105 transition-all duration-200 shadow-sm"
