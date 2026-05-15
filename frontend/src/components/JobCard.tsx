@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { IJobRequest, updateJobStatus, deleteJob } from "@/services/api";
+import { useAuth } from "@/context/AuthContext";
 
 interface JobCardProps {
   job: IJobRequest;
@@ -39,6 +40,7 @@ const categoryIcons: Record<string, string> = {
 };
 
 export default function JobCard({ job, onJobUpdated }: JobCardProps) {
+  const { user } = useAuth();
   const [status, setStatus] = useState<Status>(job.status);
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -47,6 +49,7 @@ export default function JobCard({ job, onJobUpdated }: JobCardProps) {
 
   const icon = categoryIcons[job.category || ""] || "🔨";
   const isClosed = status === "Closed";
+  const isTradesperson = user?.role === "tradesperson";
   const currentStyle = statusConfig[status];
 
   // Close dropdown on outside click
@@ -71,11 +74,9 @@ export default function JobCard({ job, onJobUpdated }: JobCardProps) {
 
   const handleStatusSelect = async (newStatus: Status) => {
     setDropdownOpen(false);
-
     if (newStatus === status) return;
 
     setUpdating(true);
-
     try {
       await updateJobStatus(job._id, newStatus);
       setStatus(newStatus);
@@ -96,7 +97,6 @@ export default function JobCard({ job, onJobUpdated }: JobCardProps) {
     }
 
     setDeleting(true);
-
     try {
       await deleteJob(job._id);
       onJobUpdated();
@@ -125,25 +125,23 @@ export default function JobCard({ job, onJobUpdated }: JobCardProps) {
       <div className="flex items-start justify-between mb-4">
         <span className="text-2xl">{icon}</span>
 
-        {/* Custom Status Dropdown */}
-        <div className="relative" ref={dropdownRef}>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!isClosed) setDropdownOpen(!dropdownOpen);
-            }}
-            disabled={updating || isClosed}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer transition-all duration-200 ${
-              currentStyle.bg
-            } ${currentStyle.text} ${
-              updating ? "opacity-50 cursor-wait" : ""
-            } ${isClosed ? "cursor-default" : "hover:shadow-md"}`}
-          >
-            <span
-              className={`w-2 h-2 rounded-full ${currentStyle.dot}`}
-            ></span>
-            {status}
-            {!isClosed && (
+        {/* Tradesperson: Custom dropdown | Homeowner: Static badge */}
+        {isTradesperson && !isClosed ? (
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setDropdownOpen(!dropdownOpen);
+              }}
+              disabled={updating}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer transition-all duration-200 ${
+                currentStyle.bg
+              } ${currentStyle.text} ${
+                updating ? "opacity-50 cursor-wait" : "hover:shadow-md"
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${currentStyle.dot}`}></span>
+              {status}
               <svg
                 className={`w-3 h-3 transition-transform duration-200 ${
                   dropdownOpen ? "rotate-180" : ""
@@ -159,54 +157,54 @@ export default function JobCard({ job, onJobUpdated }: JobCardProps) {
                   d="M19 9l-7 7-7-7"
                 />
               </svg>
+            </button>
+
+            {dropdownOpen && (
+              <div className="absolute right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-200 p-2 z-50 min-w-[140px]">
+                {allStatuses.map((s) => {
+                  const style = statusConfig[s];
+                  const isActive = s === status;
+                  return (
+                    <button
+                      key={s}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStatusSelect(s);
+                      }}
+                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer mb-1 last:mb-0 ${
+                        style.bg
+                      } ${style.text} ${
+                        isActive
+                          ? "ring-2 ring-offset-1 ring-gray-300"
+                          : "hover:scale-105 hover:shadow-sm"
+                      }`}
+                    >
+                      <span className={`w-2 h-2 rounded-full ${style.dot}`}></span>
+                      {s}
+                      {isActive && (
+                        <svg className="w-3 h-3 ml-auto" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             )}
-          </button>
-
-          {/* Dropdown Menu */}
-          {dropdownOpen && (
-            <div className="absolute right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-200 p-2 z-50 min-w-[140px]">
-              {allStatuses.map((s) => {
-                const style = statusConfig[s];
-                const isActive = s === status;
-
-                return (
-                  <button
-                    key={s}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleStatusSelect(s);
-                    }}
-                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer mb-1 last:mb-0 ${
-                      style.bg
-                    } ${style.text} ${
-                      isActive
-                        ? "ring-2 ring-offset-1 ring-gray-300"
-                        : "hover:scale-105 hover:shadow-sm"
-                    }`}
-                  >
-                    <span
-                      className={`w-2 h-2 rounded-full ${style.dot}`}
-                    ></span>
-                    {s}
-                    {isActive && (
-                      <svg
-                        className="w-3 h-3 ml-auto"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          /* Static badge for homeowner or closed */
+          <span
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${currentStyle.bg} ${currentStyle.text}`}
+          >
+            <span className={`w-2 h-2 rounded-full ${currentStyle.dot}`}></span>
+            {status}
+          </span>
+        )}
       </div>
 
       {/* Title */}
@@ -237,9 +235,7 @@ export default function JobCard({ job, onJobUpdated }: JobCardProps) {
           {job.category && (
             <span
               className={`text-xs font-medium px-3 py-1 rounded-full ${
-                isClosed
-                  ? "text-gray-300 bg-gray-50"
-                  : "text-gray-500 bg-gray-50"
+                isClosed ? "text-gray-300 bg-gray-50" : "text-gray-500 bg-gray-50"
               }`}
             >
               {job.category}
@@ -256,14 +252,16 @@ export default function JobCard({ job, onJobUpdated }: JobCardProps) {
           )}
         </div>
 
-        {/* Delete Badge */}
-        <button
-          onClick={handleDelete}
-          className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600 text-white text-xs font-semibold cursor-pointer hover:bg-red-700 hover:scale-105 transition-all duration-200 shadow-sm"
-          title="Delete request"
-        >
-        Delete
-        </button>
+        {/* Delete — only for tradesperson */}
+        {isTradesperson && (
+          <button
+            onClick={handleDelete}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600 text-white text-xs font-semibold cursor-pointer hover:bg-red-700 hover:scale-105 transition-all duration-200 shadow-sm"
+            title="Delete request"
+          >
+            🗑️ Delete
+          </button>
+        )}
       </div>
     </div>
   );

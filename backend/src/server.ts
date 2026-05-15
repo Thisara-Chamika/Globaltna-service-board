@@ -31,7 +31,7 @@ app.use((req, res) => {
   });
 });
 
-// ── Global Error Handler (must be last) ──
+// ── Global Error Handlerm──
 app.use(errorHandler);
 
 // ── Start Server ──

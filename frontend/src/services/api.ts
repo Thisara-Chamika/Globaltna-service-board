@@ -1,5 +1,32 @@
 const API_BASE = "http://localhost:5000/api/jobs";
 
+// ── Helper to get token ──
+const getToken = (): string | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = localStorage.getItem("user");
+    if (stored) {
+      const user = JSON.parse(stored);
+      return user.token || null;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+};
+
+// ── Auth headers ──
+const authHeaders = (): Record<string, string> => {
+  const token = getToken();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
+};
+
 // ── TypeScript Interfaces ──
 export interface IJobRequest {
   _id: string;
@@ -22,7 +49,7 @@ export interface CreateJobPayload {
   contactEmail?: string;
 }
 
-// ── GET all jobs (with filters) ──
+// ── GET all jobs ──
 export const fetchJobs = async (
   category?: string,
   status?: string
@@ -32,7 +59,9 @@ export const fetchJobs = async (
   if (status) params.append("status", status);
 
   const query = params.toString() ? `?${params.toString()}` : "";
-  const res = await fetch(`${API_BASE}${query}`);
+  const res = await fetch(`${API_BASE}${query}`, {
+    headers: authHeaders(),
+  });
 
   if (!res.ok) throw new Error("Failed to fetch jobs");
 
@@ -42,7 +71,9 @@ export const fetchJobs = async (
 
 // ── GET single job ──
 export const fetchJobById = async (id: string): Promise<IJobRequest> => {
-  const res = await fetch(`${API_BASE}/${id}`);
+  const res = await fetch(`${API_BASE}/${id}`, {
+    headers: authHeaders(),
+  });
 
   if (!res.ok) throw new Error("Failed to fetch job");
 
@@ -56,7 +87,7 @@ export const createJob = async (
 ): Promise<IJobRequest> => {
   const res = await fetch(API_BASE, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders(),
     body: JSON.stringify(payload),
   });
 
@@ -76,7 +107,7 @@ export const updateJobStatus = async (
 ): Promise<IJobRequest> => {
   const res = await fetch(`${API_BASE}/${id}`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders(),
     body: JSON.stringify({ status }),
   });
 
@@ -90,6 +121,7 @@ export const updateJobStatus = async (
 export const deleteJob = async (id: string): Promise<void> => {
   const res = await fetch(`${API_BASE}/${id}`, {
     method: "DELETE",
+    headers: authHeaders(),
   });
 
   if (!res.ok) throw new Error("Failed to delete job");
