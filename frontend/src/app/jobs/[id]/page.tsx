@@ -10,6 +10,7 @@ import {
   IJobRequest,
 } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
+import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
 
 type Status = "Open" | "In Progress" | "Closed";
 
@@ -55,6 +56,8 @@ export default function JobDetailPage({
   const [error, setError] = useState("");
   const [updating, setUpdating] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isClosed = status === "Closed";
@@ -111,16 +114,15 @@ export default function JobDetailPage({
     }
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm(`Delete "${job?.title}"? This cannot be undone.`)) {
-      return;
-    }
-
+  const handleConfirmDelete = async () => {
+    setDeleteLoading(true);
     try {
       await deleteJob(id);
+      setShowDeleteModal(false);
       router.push("/");
     } catch {
-      alert("Failed to delete job.");
+      setDeleteLoading(false);
+      setShowDeleteModal(false);
     }
   };
 
@@ -332,7 +334,7 @@ export default function JobDetailPage({
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <p className="text-xs text-gray-400 break-all">Job ID: {job._id}</p>
             <button
-              onClick={handleDelete}
+              onClick={() => setShowDeleteModal(true)}
               className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-red-600 text-white text-sm font-semibold cursor-pointer hover:bg-red-700 hover:scale-105 transition-all duration-200 shadow-sm"
             >
               🗑️ Delete Request
@@ -340,6 +342,14 @@ export default function JobDetailPage({
           </div>
         </div>
       </div>
+    {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        title={job?.title || ""}
+        onCancel={() => setShowDeleteModal(false)}
+        onConfirm={handleConfirmDelete}
+        loading={deleteLoading}
+      />
     </div>
   );
 }

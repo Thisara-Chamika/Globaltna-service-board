@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { IJobRequest, updateJobStatus, deleteJob } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
+import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
 
 interface JobCardProps {
   job: IJobRequest;
@@ -45,6 +46,7 @@ export default function JobCard({ job, onJobUpdated }: JobCardProps) {
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const icon = categoryIcons[job.category || ""] || "🔨";
@@ -88,15 +90,15 @@ export default function JobCard({ job, onJobUpdated }: JobCardProps) {
     }
   };
 
-  const handleDelete = async (e: React.MouseEvent) => {
+  const openDeleteModal = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    setShowDeleteModal(true);
+  };
 
-    if (!window.confirm(`Delete "${job.title}"? This cannot be undone.`)) {
-      return;
-    }
-
+  const handleConfirmDelete = async () => {
     setDeleting(true);
+    setShowDeleteModal(false);
     try {
       await deleteJob(job._id);
       onJobUpdated();
@@ -254,13 +256,21 @@ export default function JobCard({ job, onJobUpdated }: JobCardProps) {
 
         {/* Delete — visible for tradesperson and homeowner */}
         <button
-          onClick={handleDelete}
+          onClick={openDeleteModal}
           className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600 text-white text-xs font-semibold cursor-pointer hover:bg-red-700 hover:scale-105 transition-all duration-200 shadow-sm"
           title="Delete request"
         >
           🗑️ Delete
         </button>
       </div>
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        title={job.title}
+        onCancel={() => setShowDeleteModal(false)}
+        onConfirm={handleConfirmDelete}
+        loading={deleting}
+      />
     </div>
   );
 }
