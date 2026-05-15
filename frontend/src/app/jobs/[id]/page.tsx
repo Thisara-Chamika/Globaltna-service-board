@@ -9,6 +9,7 @@ import {
   deleteJob,
   IJobRequest,
 } from "@/services/api";
+import { useAuth } from "@/context/AuthContext";
 
 type Status = "Open" | "In Progress" | "Closed";
 
@@ -46,6 +47,7 @@ export default function JobDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const { user } = useAuth();
 
   const [job, setJob] = useState<IJobRequest | null>(null);
   const [status, setStatus] = useState<Status>("Open");
@@ -56,6 +58,7 @@ export default function JobDetailPage({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isClosed = status === "Closed";
+  const isTradesperson = user?.role === "tradesperson";
 
   useEffect(() => {
     const loadJob = async () => {
@@ -74,7 +77,6 @@ export default function JobDetailPage({
     loadJob();
   }, [id]);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -122,7 +124,6 @@ export default function JobDetailPage({
     }
   };
 
-  // ── Loading ──
   if (loading) {
     return (
       <div className="flex justify-center items-center py-32">
@@ -131,7 +132,6 @@ export default function JobDetailPage({
     );
   }
 
-  // ── Error ──
   if (error || !job) {
     return (
       <div className="max-w-2xl mx-auto py-16 text-center">
@@ -186,38 +186,34 @@ export default function JobDetailPage({
 
       {/* Main Card */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        {/* Header Section */}
+        {/* Header */}
         <div className="p-8 border-b border-gray-100">
-          <div className="flex items-start justify-between mb-6">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-6">
             <div className="flex items-center gap-4">
               <span className="text-4xl">{icon}</span>
-              <div>
-                {job.category && (
-                  <span className="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                    {job.category}
-                  </span>
-                )}
-              </div>
+              {job.category && (
+                <span className="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                  {job.category}
+                </span>
+              )}
             </div>
 
-            {/* Custom Status Dropdown */}
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => {
-                  if (!isClosed) setDropdownOpen(!dropdownOpen);
-                }}
-                disabled={updating || isClosed}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold cursor-pointer transition-all duration-200 ${
-                  currentStyle.bg
-                } ${currentStyle.text} ${
-                  updating ? "opacity-50 cursor-wait" : ""
-                } ${isClosed ? "cursor-default" : "hover:shadow-md"}`}
-              >
-                <span
-                  className={`w-2.5 h-2.5 rounded-full ${currentStyle.dot}`}
-                ></span>
-                {status}
-                {!isClosed && (
+            {/* Tradesperson: interactive dropdown | Homeowner: static badge */}
+            {isTradesperson && !isClosed ? (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  disabled={updating}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold cursor-pointer transition-all duration-200 ${
+                    currentStyle.bg
+                  } ${currentStyle.text} ${
+                    updating ? "opacity-50 cursor-wait" : "hover:shadow-md"
+                  }`}
+                >
+                  <span
+                    className={`w-2.5 h-2.5 rounded-full ${currentStyle.dot}`}
+                  ></span>
+                  {status}
                   <svg
                     className={`w-3.5 h-3.5 transition-transform duration-200 ${
                       dropdownOpen ? "rotate-180" : ""
@@ -233,57 +229,64 @@ export default function JobDetailPage({
                       d="M19 9l-7 7-7-7"
                     />
                   </svg>
+                </button>
+
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-200 p-2 z-50 min-w-[160px]">
+                    {allStatuses.map((s) => {
+                      const style = statusConfig[s];
+                      const isActive = s === status;
+                      return (
+                        <button
+                          key={s}
+                          onClick={() => handleStatusSelect(s)}
+                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer mb-1 last:mb-0 ${
+                            style.bg
+                          } ${style.text} ${
+                            isActive
+                              ? "ring-2 ring-offset-1 ring-gray-300"
+                              : "hover:scale-105 hover:shadow-sm"
+                          }`}
+                        >
+                          <span
+                            className={`w-2 h-2 rounded-full ${style.dot}`}
+                          ></span>
+                          {s}
+                          {isActive && (
+                            <svg
+                              className="w-3 h-3 ml-auto"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 )}
-              </button>
-
-              {dropdownOpen && (
-                <div className="absolute right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-200 p-2 z-50 min-w-[160px]">
-                  {allStatuses.map((s) => {
-                    const style = statusConfig[s];
-                    const isActive = s === status;
-
-                    return (
-                      <button
-                        key={s}
-                        onClick={() => handleStatusSelect(s)}
-                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer mb-1 last:mb-0 ${
-                          style.bg
-                        } ${style.text} ${
-                          isActive
-                            ? "ring-2 ring-offset-1 ring-gray-300"
-                            : "hover:scale-105 hover:shadow-sm"
-                        }`}
-                      >
-                        <span
-                          className={`w-2 h-2 rounded-full ${style.dot}`}
-                        ></span>
-                        {s}
-                        {isActive && (
-                          <svg
-                            className="w-3 h-3 ml-auto"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              /* Static badge for homeowner or closed */
+              <span
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${currentStyle.bg} ${currentStyle.text}`}
+              >
+                <span
+                  className={`w-2.5 h-2.5 rounded-full ${currentStyle.dot}`}
+                ></span>
+                {status}
+              </span>
+            )}
           </div>
 
-          {/* Title */}
           <h1 className="text-2xl font-bold text-gray-900 mb-2">{job.title}</h1>
 
-          {/* Meta */}
-          <div className="flex items-center gap-4 text-sm text-gray-400">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-400">
             {job.location && (
               <span className="flex items-center gap-1">📍 {job.location}</span>
             )}
@@ -293,7 +296,7 @@ export default function JobDetailPage({
           </div>
         </div>
 
-        {/* Description Section */}
+        {/* Description */}
         <div className="p-8 border-b border-gray-100">
           <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
             Description
@@ -303,7 +306,7 @@ export default function JobDetailPage({
           </p>
         </div>
 
-        {/* Contact Section */}
+        {/* Contact */}
         <div className="p-8 border-b border-gray-100">
           <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
             Contact Information
@@ -324,12 +327,10 @@ export default function JobDetailPage({
           </div>
         </div>
 
-        {/* Actions Section */}
+        {/* Actions — only for tradesperson */}
         <div className="p-8 bg-gray-50">
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-gray-400">
-              Job ID: {job._id}
-            </p>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <p className="text-xs text-gray-400 break-all">Job ID: {job._id}</p>
             <button
               onClick={handleDelete}
               className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-red-600 text-white text-sm font-semibold cursor-pointer hover:bg-red-700 hover:scale-105 transition-all duration-200 shadow-sm"

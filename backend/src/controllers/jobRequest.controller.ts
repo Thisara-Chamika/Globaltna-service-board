@@ -9,7 +9,7 @@ export const getAllJobs = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { category, status } = req.query;
+    const { category, status, createdBy } = req.query;
     const filter: Record<string, string> = {};
 
     if (category && typeof category === "string") {
@@ -17,6 +17,9 @@ export const getAllJobs = async (
     }
     if (status && typeof status === "string") {
       filter.status = status;
+    }
+    if (createdBy && typeof createdBy === "string") {
+      filter.createdBy = createdBy;
     }
 
     const jobs = await JobRequest.find(filter).sort({ createdAt: -1 });
@@ -77,6 +80,7 @@ export const createJob = async (
       location,
       contactName,
       contactEmail,
+      createdBy: req.user?.userId,
     });
 
     res.status(201).json({
@@ -135,11 +139,21 @@ export const deleteJob = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const job = await JobRequest.findByIdAndDelete(req.params.id);
+    const job = await JobRequest.findById(req.params.id);
 
     if (!job) {
       throw new AppError("Job request not found", 404);
     }
+
+    // Homeowners can only delete their own jobs
+    if (
+      req.user?.role === "homeowner" &&
+      job.createdBy?.toString() !== req.user.userId
+    ) {
+      throw new AppError("You can only delete your own job requests", 403);
+    }
+
+    await JobRequest.findByIdAndDelete(req.params.id);
 
     res.status(200).json({
       success: true,
